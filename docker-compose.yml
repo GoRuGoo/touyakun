@@ -16,7 +16,7 @@ services:
   api:
     container_name: api
     tty: true
-    build: ./api
+    build: ./api/
     expose:
       - 8080
     volumes:
