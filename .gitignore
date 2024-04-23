@@ -2,3 +2,4 @@
 /reverseproxy/key
 /api/tmp
 .DS_Store
+__pycache__
