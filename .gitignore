@@ -1,3 +1,4 @@
 /reverseproxy/log
 /reverseproxy/key
 /api/tmp
+.DS_Store
