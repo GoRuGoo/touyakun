@@ -21,6 +21,14 @@ services:
       - 8080
     volumes:
       - ./api:/go/src/api
+  ai:
+    container_name: ai
+    build: ./ai/
+    tty: true
+    expose:
+      - 8080
+    volumes:
+      - ./ai:/usr/src/ai
   db:
     image: postgres:latest
     container_name: db
