@@ -35,7 +35,7 @@ services:
     volumes:
       - ./ai:/usr/src/ai
   db:
-    image: postgres:latest
+    image: postgres:16.2-alpine
     container_name: db
     tty: true
     environment:
