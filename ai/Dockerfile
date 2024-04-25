@@ -1,15 +1,24 @@
-FROM python:latest
+FROM python:3.12.3
 
 RUN mkdir /usr/src/ai
 
 WORKDIR /usr/src/ai
 
+COPY . .
+
 RUN pip install --upgrade pip
 
-RUN pip install FastAPI uvicorn
+# Poetryのインストール
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
-COPY . .
+ENV PATH /root/.local/bin:$PATH
+
+# Poetryが仮想環境を作らないようにする
+RUN poetry config virtualenvs.create false
+
+RUN poetry install --no-root
+
 
 EXPOSE 8080
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["poetry" ,"run","uvicorn", "main:app", "--host", "ai", "--port", "8080", "--reload"]
