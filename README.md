@@ -81,3 +81,4 @@ curl -X GET -H "Content-Type application/json" "https://touyakun.com"
 ## Author
 
 - [Yuta Ito](https://github.com/GoRuGoo)
+- [Ryo Takezawa](https://github.com/rtasan)
