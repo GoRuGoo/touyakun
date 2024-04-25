@@ -41,6 +41,9 @@ cd reverseproxy
 mkdir key
 ```
 ```
+cd key
+```
+```
 brew install mkcert
 ```
 ```
