@@ -11,8 +11,11 @@ services:
       - ./reverseproxy/log:/var/log/nginx
       - ./reverseproxy/key/touyakun.com-key.pem:/etc/certs/touyakun.com-key.pem
       - ./reverseproxy/key/touyakun.com.pem:/etc/certs/touyakun.com.pem
+      - ./reverseproxy/key/ai.touyakun.com-key.pem:/etc/certs/ai.touyakun.com-key.pem
+      - ./reverseproxy/key/ai.touyakun.com.pem:/etc/certs/ai.touyakun.com.pem
     depends_on:
       - api
+      - ai
   api:
     container_name: api
     tty: true
@@ -21,6 +24,8 @@ services:
       - 8080
     volumes:
       - ./api:/go/src/api
+    depends_on:
+      - db
   ai:
     container_name: ai
     build: ./ai/
