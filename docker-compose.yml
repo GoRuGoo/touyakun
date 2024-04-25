@@ -11,6 +11,8 @@ services:
       - ./reverseproxy/log:/var/log/nginx
       - ./reverseproxy/key/touyakun.com-key.pem:/etc/certs/touyakun.com-key.pem
       - ./reverseproxy/key/touyakun.com.pem:/etc/certs/touyakun.com.pem
+      - ./reverseproxy/key/ai.touyakun.com-key.pem:/etc/certs/ai.touyakun.com-key.pem
+      - ./reverseproxy/key/ai.touyakun.com.pem:/etc/certs/ai.touyakun.com.pem
     depends_on:
       - api
   api:
