@@ -49,6 +49,9 @@ mkcert -install
 ```
 mkcert touyakun.com
 ```
+```
+mkcert ai.touyakun.com
+```
 
 4. Add to /etc/hosts(Not necessary if you use cURL's "--resolve" option when sending a request)
 ```
