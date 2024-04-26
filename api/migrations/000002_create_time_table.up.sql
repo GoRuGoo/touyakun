@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS time(
+    id SERIAL PRIMARY KEY,
+    time TIMESTAMP NOT NULL,
+    morning_flg BOOLEAN NOT NULL,
+    afternoon_flg BOOLEAN NOT NULL,
+    evening_flg BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
