@@ -11,5 +11,7 @@ func NewRouter() *gin.Engine {
 	config.AllowOrigins = []string{"*"}
 	r.Use(cors.New(config))
 
+	initializeDosageRouter(r)
+
 	return r
 }
