@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile
 
 router = APIRouter()
 
 
-@router.get("/medications/", tags=["medications"])
-async def read_router():
-    return {"message": "Hello, world! Medications"}
+@router.post("/medications/", tags=["medications"])
+async def recognize_medications(file: UploadFile):
+    return {"filename": file.filename}
+    
