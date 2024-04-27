@@ -43,13 +43,14 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 				ON
 					dosage.time_id = time.id
 				WHERE
-					users.auth_key = 'test_auth'
+					users.auth_key = $1
 				`)
 	if err != nil {
 		return nil, err
 	}
+	defer stmt.Close()
 
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(authKey)
 	if err != nil {
 		return nil, err
 	}
