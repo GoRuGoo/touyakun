@@ -22,6 +22,13 @@ func NewRouter() *gin.Engine {
 		log.Fatal(err)
 	}
 
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+		return
+	})
+
 	initializeDosageRouter(r, db)
 
 	return r

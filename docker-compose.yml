@@ -39,12 +39,26 @@ services:
     container_name: db
     tty: true
     environment:
-      - POSTGRES_DB=test
-      - POSTGRES_USER=test
+      - POSTGRES_DB=touyakun
+      - POSTGRES_USER=touyakun
       - POSTGRES_PASSWORD=password
     ports:
       - 5432:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
+  db-test:
+    image: postgres:16.2-alpine
+    container_name: db-test
+    tty: true
+    environment:
+      - POSTGRES_DB=testcase
+      - POSTGRES_USER=testcase
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5433:5432
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+
 volumes:
   postgres-data:
+  postgres-test-data:
