@@ -1,13 +1,17 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	"database/sql"
+	"github.com/gin-gonic/gin"
+	"touyakun/controllers"
+	"touyakun/models"
+)
 
-func initializeDosageRouter(r *gin.Engine) {
+func initializeDosageRouter(r *gin.Engine, db *sql.DB) {
 	dosage := r.Group("/dosage")
-	{
-		dosage.GET("/medications", func(c *gin.Context) {
-			c.JSON(200, gin.H{"test": "medications"})
-		})
-		return
-	}
+
+	dosageModel := models.InitializeDosageRepo(db)
+	dosageController := controllers.InitializeDosageController(dosageModel)
+
+	dosage.GET("/medications", dosageController.GetMedications)
 }
