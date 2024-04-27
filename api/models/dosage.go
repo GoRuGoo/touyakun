@@ -13,7 +13,7 @@ func InitializeDosageRepo(db *sql.DB) *DosageRepo {
 }
 
 type DosageModel interface {
-	GetMedications(authId string) ([]MedicationListForGetMedications, error)
+	GetMedications(authKey string) ([]MedicationListForGetMedications, error)
 }
 
 type MedicationListForGetMedications struct {
@@ -26,7 +26,7 @@ type MedicationListForGetMedications struct {
 	Time       string `json:"time"`
 }
 
-func (dr *DosageRepo) GetMedications(authId string) ([]MedicationListForGetMedications, error) {
+func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedications, error) {
 	stmt, err := dr.repo.Prepare(
 		`
 			SELECT
@@ -49,7 +49,7 @@ func (dr *DosageRepo) GetMedications(authId string) ([]MedicationListForGetMedic
 		return nil, err
 	}
 
-	rows, err := stmt.Query(authId)
+	rows, err := stmt.Query(authKey)
 	if err != nil {
 		return nil, err
 	}
