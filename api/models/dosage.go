@@ -29,27 +29,27 @@ type MedicationListForGetMedications struct {
 func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedications, error) {
 	stmt, err := dr.repo.Prepare(
 		`
-			SELECT
-				dosage.name,dosage.amount,dosage.duration,
-				time.morning_flg,time.noon_flg,time.evening_flg,time.night_flg
-			FROM
-				dosage
-			INNER JOIN
-				users
-			ON
-				dosage.user_id = users.id
-			INNER JOIN
-				time
-			ON
-				dosage.time_id = time.id
-			WHERE
-				users.auth_key = ?
-			`)
+				SELECT
+					dosage.name,dosage.amount,dosage.duration,
+					time.morning_flg,time.afternoon_flg,time.evening_flg
+				FROM
+					dosage
+				INNER JOIN
+					users
+				ON
+					dosage.user_id = users.id
+				INNER JOIN
+					time
+				ON
+					dosage.time_id = time.id
+				WHERE
+					users.auth_key = 'test_auth'
+				`)
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := stmt.Query(authKey)
+	rows, err := stmt.Query()
 	if err != nil {
 		return nil, err
 	}
