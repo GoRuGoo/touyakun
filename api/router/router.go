@@ -15,7 +15,7 @@ func NewRouter() *gin.Engine {
 	config.AllowOrigins = []string{"*"}
 	r.Use(cors.New(config))
 
-	db, err := sql.Open("postgres", "host=db port=5432 user=test password=password dbname=test sslmode=disable")
+	db, err := sql.Open("postgres", "host=db port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
