@@ -7,8 +7,9 @@ acceptable_content_types = ["image/jpeg", "image/png"] # jpegとpngのみ受け�
 class GeminiRecognitionController:
     def __init__(self) -> None:
         pass
-
-    def get_medications(self, file:UploadFile) -> Medications:
+    
+    @staticmethod
+    def get_medications(file: UploadFile) -> Medications:
         # routerから呼ばれる
         # バリデーション処理
         if file.size > 10485760: # 10MB
@@ -16,6 +17,3 @@ class GeminiRecognitionController:
         if file.content_type not in acceptable_content_types:
             raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=f"Content type is not supported. Supported content type is image/jpeg.")
         return gemini_recognition_service.get_medications(file.read())
-    
-
-gemini_recognition_controller = GeminiRecognitionController()
