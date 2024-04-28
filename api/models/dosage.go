@@ -1,15 +1,14 @@
 package models
 
 import (
-	"database/sql"
 	"errors"
 )
 
 type DosageRepo struct {
-	repo *sql.DB
+	repo SqlExecutor
 }
 
-func InitializeDosageRepo(db *sql.DB) *DosageRepo {
+func InitializeDosageRepo(db SqlExecutor) *DosageRepo {
 	return &DosageRepo{repo: db}
 }
 
@@ -18,13 +17,10 @@ type DosageModel interface {
 }
 
 type MedicationListForGetMedications struct {
-	Name       string `json:"name"`
-	Amount     int    `json:"amount"`
-	Duration   int    `json:"duration"`
-	MorningFlg bool   `json:"morning_flg"`
-	NoonFlg    bool   `json:"noon_flg"`
-	EveningFlg bool   `json:"evening_flg"`
-	Time       string `json:"time"`
+	Name     string `json:"name"`
+	Amount   int    `json:"amount"`
+	Duration int    `json:"duration"`
+	Time     string `json:"time"`
 }
 
 func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedications, error) {
@@ -87,7 +83,6 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 
 		medications = append(medications, medication)
 	}
-
 
 	//配列が取得で木なかった場合のエラーをここで返す
 	if len(medications) == 0 {
