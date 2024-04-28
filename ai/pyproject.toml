@@ -10,6 +10,7 @@ skip = "^0.1.0"
 fastapi = "^0.110.2"
 uvicorn = "^0.29.0"
 python-multipart = "^0.0.9"
+google-cloud-aiplatform = "^1.48.0"
 
 
 [build-system]

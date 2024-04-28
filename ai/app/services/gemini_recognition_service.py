@@ -1,17 +1,60 @@
+from vertexai.preview.generative_models import GenerativeModel, Image
 from app.schemas.medications import Medications, Medication
+import json
+from typing import AsyncIterable, Union
 
 
 class GeminiRecognitionService:
     def __init__(self):
         # VertexAIの初期化処理
-        pass
-    def get_medications(self, image:bytes)->Medications:
+        self.model = GenerativeModel("gemini-pro-vision")
+
+    async def get_medications(self, image: bytes) -> Union[
+        "Medications",
+        AsyncIterable["Medications"],
+    ]:
         # routerから呼ばれる
-        # とりあえずダミーデータを返す
-        return Medications(medications=[Medication(name="test", morning=True, afternoon=True, evening=True, dosage=1, duration_days=1), Medication(name="test2", morning=True, afternoon=False, evening=False, dosage=2, duration_days=5)])
-    
-    def recognize(self):
+        img = Image.from_bytes(image)
+        json_dict = await self.recognize(img)
+        # Medicationsオブジェクトに変換して返す
+        medications = []
+        for med in json_dict["medications"]:
+            medications.append(Medication(**med))
+        return Medications(medications=medications)
+
+    async def recognize(self, img: Image):
         # VertexAIのAPIを呼ぶ
-        pass
+        response = await self.model.generate_content_async(
+            [
+                """この画像から、薬の名前、朝昼夜のうちいつ何錠の薬を何日間にわたって飲めばよいかを認識し、json形式で返してください。
+        以下は返却するjson形式の例です。
+        {
+            "medications": [
+                {
+                    "name": "Medication 1",
+                    "morning": false,
+                    "afternoon": true,
+                    "evening": true,
+                    "dosage": 1,
+                    "duration_days": 5
+                },
+                {
+                    "name": "Medication 2",
+                    "morning": true,
+                    "afternoon": false,
+                    "evening": true,
+                    "dosage": 2,
+                    "duration_days": 20
+                }
+            ]
+        }""",
+                img,
+            ]
+        )
+        # ここでresponseをパースしてMedicationsオブジェクトに変換して返す
+        res = response.text.replace(" ```json\n", "").replace("\n```", "")
+        json_dict = json.loads(res)
+        return json_dict
+
 
 gemini_recognition_service = GeminiRecognitionService()
