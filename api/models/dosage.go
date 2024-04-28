@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type DosageRepo struct {
@@ -85,6 +86,12 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 		}
 
 		medications = append(medications, medication)
+	}
+
+
+	//配列が取得で木なかった場合のエラーをここで返す
+	if len(medications) == 0 {
+		return nil, errors.New("Record not found.")
 	}
 
 	return medications, nil
