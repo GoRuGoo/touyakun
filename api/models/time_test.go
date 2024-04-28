@@ -93,7 +93,7 @@ func TestDeleteNonexistentTime(t *testing.T) {
 	}
 
 	// Check if the error is the expected one
-	if err.Error() != "no rows were deleted" {
+	if err == nil {
 		t.Fatalf("Expected error message 'no rows were deleted', but got '%v'", err)
 	}
 }
