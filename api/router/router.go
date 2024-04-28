@@ -24,6 +24,8 @@ func NewRouter() *gin.Engine {
 
 	initializeDosageRouter(r, db)
 
+	initializeTimeRouter(r, db)
+
 	return r
 
 }
