@@ -21,4 +21,4 @@ RUN poetry install --no-root
 
 EXPOSE 8080
 
-CMD ["poetry" ,"run","uvicorn", "main:app", "--host", "ai", "--port", "8080", "--reload"]
+CMD ["poetry" ,"run","uvicorn", "app.main:app", "--host", "ai", "--port", "8080", "--reload"]
