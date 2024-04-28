@@ -6,26 +6,26 @@ from app.exception.errors import RecognitionException
 
 
 class GeminiRecognitionService:
-    def __init__(self):
-        # VertexAIの初期化処理
-        self.model = GenerativeModel("gemini-pro-vision")
+    __model = GenerativeModel("gemini-pro-vision")  # 未来の自分が治す
 
-    async def get_medications(self, image: bytes) -> Union[
+    @staticmethod
+    async def get_medications(image: bytes) -> Union[
         "Medications",
         AsyncIterable["Medications"],
     ]:
         # routerから呼ばれる
         img = Image.from_bytes(image)
-        json_dict = await self.recognize(img)
+        json_dict = await GeminiRecognitionService.recognize(img)
         # Medicationsオブジェクトに変換して返す
         medications = []
         for med in json_dict["medications"]:
             medications.append(Medication(**med))
         return Medications(medications=medications)
 
-    async def recognize(self, img: Image):
+    @staticmethod
+    async def recognize(img: Image):
         # VertexAIのAPIを呼ぶ
-        response = await self.model.generate_content_async(
+        response = await GeminiRecognitionService.__model.generate_content_async(
             [
                 """この画像から、薬の名前、朝昼夜のうちいつ何錠の薬を何日間にわたって飲めばよいかを認識し、json形式で返してください。
         以下は返却するjson形式の例です。
@@ -63,6 +63,3 @@ class GeminiRecognitionService:
                 msg="Failed to parse response from VertexAI. (Data returned from VertexAI API was invalid.)"
             ) from e
         return json_dict
-
-
-gemini_recognition_service = GeminiRecognitionService()

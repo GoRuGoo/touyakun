@@ -1,13 +1,10 @@
 from fastapi import UploadFile, HTTPException, status
-from app.services.gemini_recognition_service import gemini_recognition_service
+from app.services.gemini_recognition_service import GeminiRecognitionService
 from app.schemas.medications import Medications
 
 
 class GeminiRecognitionController:
     ACCEPTABLE_CONTENT_TYPES = ["image/jpeg", "image/png"]  # jpegとpngのみ受け付ける
-
-    def __init__(self) -> None:
-        pass
 
     @staticmethod
     async def get_medications(file: UploadFile) -> Medications:
@@ -22,4 +19,4 @@ class GeminiRecognitionController:
                 status_code=status.HTTP_406_NOT_ACCEPTABLE,
                 detail="Content type is not supported. Supported content type is image/jpeg and image/png.",
             )
-        return await gemini_recognition_service.get_medications(await file.read())
+        return await GeminiRecognitionService.get_medications(await file.read())
