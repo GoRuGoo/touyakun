@@ -55,3 +55,45 @@ func TestDeleteTime(t *testing.T) {
 		t.Fatalf("Failed to delete time: time record still exists")
 	}
 }
+
+func TestDeleteNonexistentTime(t *testing.T) {
+	// データベースに接続
+	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
+	if err != nil {
+		t.Fatalf("Failed to connect to DB: %v", err)
+	}
+	defer db.Close()
+
+	// テスト用のSQLとはいえデータを破壊したくないのでトランザクションを開始
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	// テストデータをロード
+	traitSql, err := ReadSQLFile("./testdata/time_test.sql")
+	if err != nil {
+		t.Fatalf("Failed to read SQL file: %v", err)
+	}
+	_, err = tx.Exec(traitSql)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	repo := InitializeTimeRepo(tx)
+
+	const TEST_AUTH = "jfijfiajfdajfjafewij;oa"
+	const NONEXISTENT_ID = 9999999 // This ID does not exist in the test data
+
+	// DeleteTimeメソッドをテスト
+	err = repo.DeleteTime(TEST_AUTH, NONEXISTENT_ID)
+	if err == nil {
+		t.Fatalf("Expected an error when deleting a nonexistent time, but got none")
+	}
+
+	// Check if the error is the expected one
+	if err.Error() != "no rows were deleted" {
+		t.Fatalf("Expected error message 'no rows were deleted', but got '%v'", err)
+	}
+}
