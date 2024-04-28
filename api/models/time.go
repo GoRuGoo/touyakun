@@ -1,5 +1,7 @@
 package models
 
+import "errors"
+
 type TimeRepo struct {
 	repo SqlExecutor
 }
@@ -32,9 +34,18 @@ func (tr *TimeRepo) DeleteTime(authKey string, id int) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(1, authKey)
+	res, err := stmt.Exec(id, authKey)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("no rows were deleted")
 	}
 
 	return nil
