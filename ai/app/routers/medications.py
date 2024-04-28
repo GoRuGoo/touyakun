@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, Form
+from fastapi import APIRouter, UploadFile
 from app.controllers.gemini_recognition_controller import GeminiRecognitionController
 from app.schemas.medications import Medications
 
