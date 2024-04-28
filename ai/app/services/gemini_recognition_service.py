@@ -2,7 +2,6 @@ from vertexai.preview.generative_models import GenerativeModel, Image
 from app.schemas.medications import Medications, Medication
 import json
 from typing import AsyncIterable, Union
-from fastapi import HTTPException
 from app.exception.errors import RecognitionException
 
 
