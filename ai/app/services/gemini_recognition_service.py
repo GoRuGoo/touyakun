@@ -1,17 +1,65 @@
+from vertexai.preview.generative_models import GenerativeModel, Image
 from app.schemas.medications import Medications, Medication
+import json
+from typing import AsyncIterable, Union
+from app.exception.errors import RecognitionException
 
 
 class GeminiRecognitionService:
-    def __init__(self):
-        # VertexAIの初期化処理
-        pass
-    def get_medications(self, image:bytes)->Medications:
-        # routerから呼ばれる
-        # とりあえずダミーデータを返す
-        return Medications(medications=[Medication(name="test", morning=True, afternoon=True, evening=True, dosage=1, duration_days=1), Medication(name="test2", morning=True, afternoon=False, evening=False, dosage=2, duration_days=5)])
-    
-    def recognize(self):
-        # VertexAIのAPIを呼ぶ
-        pass
+    __model = GenerativeModel("gemini-pro-vision")  # 未来の自分が治す
 
-gemini_recognition_service = GeminiRecognitionService()
+    @staticmethod
+    async def get_medications(image: bytes) -> Union[
+        "Medications",
+        AsyncIterable["Medications"],
+    ]:
+        # routerから呼ばれる
+        img = Image.from_bytes(image)
+        json_dict = await GeminiRecognitionService.recognize(img)
+        # Medicationsオブジェクトに変換して返す
+        medications = []
+        for med in json_dict["medications"]:
+            medications.append(Medication(**med))
+        return Medications(medications=medications)
+
+    @staticmethod
+    async def recognize(img: Image):
+        # VertexAIのAPIを呼ぶ
+        response = await GeminiRecognitionService.__model.generate_content_async(
+            [
+                """この画像から、薬の名前、朝昼夜のうちいつ何錠の薬を何日間にわたって飲めばよいかを認識し、json形式で返してください。
+        以下は返却するjson形式の例です。
+        {
+            "medications": [
+                {
+                    "name": "Medication 1",
+                    "morning": false,
+                    "afternoon": true,
+                    "evening": true,
+                    "dosage": 1,
+                    "duration_days": 5
+                },
+                {
+                    "name": "Medication 2",
+                    "morning": true,
+                    "afternoon": false,
+                    "evening": true,
+                    "dosage": 2,
+                    "duration_days": 20
+                }
+            ]
+        }
+        """,
+                img,
+            ]
+        )
+        # ここでresponseをパースしてMedicationsオブジェクトに変換して返す
+        # エラー処理
+        try:
+            res = response.text.replace(" ```json\n", "").replace("\n```", "")
+            json_dict = json.loads(res)
+        except Exception as e:
+            raise RecognitionException(
+                msg="Failed to parse response from VertexAI. (Data returned from VertexAI API was invalid.)"
+            ) from e
+        return json_dict
