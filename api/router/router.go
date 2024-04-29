@@ -2,30 +2,21 @@ package router
 
 import (
 	"database/sql"
-	"log"
-	"touyakun/middleware"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"log"
+	"net/http"
+	"os"
 )
 
-func NewRouter() *gin.Engine {
-	r := gin.Default()
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"*"}
-	r.Use(cors.New(config))
-	r.Use(middleware.ErrorHandler())
-
-	db, err := sql.Open("postgres", "host=db port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
+func InitializeRouter() {
+	db, err := sql.Open("postgres", "host=localhost port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	app, err := NewLINEConfig(os.Getenv("CHANNEL_SECRET"), os.Getenv("CHANNEL_TOKEN"), db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	initializeDosageRouter(r, db)
-
-	initializeTimeRouter(r, db)
-
-	return r
-
+	http.HandleFunc("/", app.CallBackRouter)
 }

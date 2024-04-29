@@ -1,8 +1,14 @@
 package main
 
-import "touyakun/router"
+import (
+	"log"
+	"net/http"
+	"touyakun/router"
+)
 
 func main() {
-	r := router.NewRouter()
-	r.Run(":8080")
+	router.InitializeRouter()
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 }
