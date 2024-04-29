@@ -31,3 +31,21 @@ func (uc *UserController) RegisterUser(userId string) error {
 	}
 	return nil
 }
+
+func (uc *UserController) DeleteUser(userId string) error {
+	isNotExist, err := uc.userModel.IsNotExistUser(userId)
+	if err != nil {
+		return err
+	}
+
+	if isNotExist {
+		return errors.New("user does not exist")
+	}
+
+	err = uc.userModel.DeleteUser(userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
