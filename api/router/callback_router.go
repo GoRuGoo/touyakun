@@ -36,6 +36,8 @@ func NewLINEConfig(channelSecret, channelToken string, db *sql.DB) (*LINEConfig,
 }
 
 func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
 	cb, err := webhook.ParseRequest(app.channelSecret, r)
 	if err != nil {
 		if errors.Is(err, webhook.ErrInvalidSignature) {
@@ -47,7 +49,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModel := models.InitializeUserRepo(app.db)
-	userController := controllers.InitializeUserController(userModel)
+	userController := controllers.InitializeUserController(userModel, w)
 
 	for _, event := range cb.Events {
 		switch e := event.(type) {
@@ -55,21 +57,13 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
 				// ユーザーが友達追加した時の処理
-				err := userController.RegisterUser(s.UserId)
-				if err != nil {
-					w.WriteHeader(500)
-					return
-				}
+				userController.RegisterUser(s.UserId)
 			}
 		case webhook.UnfollowEvent:
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
 				// ユーザーが友達追加した時の処理
-				err := userController.DeleteUser(s.UserId)
-				if err != nil {
-					w.WriteHeader(500)
-					return
-				}
+				userController.DeleteUser(s.UserId)
 			}
 		}
 	}
