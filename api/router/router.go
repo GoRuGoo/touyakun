@@ -5,17 +5,18 @@ import (
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
+	"os"
 )
 
 func InitializeRouter() {
-	db, err := sql.Open("postgres", "host=db port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
+	db, err := sql.Open("postgres", "host=localhost port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
-	app, err := NewLINEConfig(db)
+	app, err := NewLINEConfig(os.Getenv("CHANNEL_SECRET"), os.Getenv("CHANNEL_TOKEN"), db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/callback", app.CallBackRouter)
+	http.HandleFunc("/", app.CallBackRouter)
 }
