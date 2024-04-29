@@ -61,6 +61,16 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
+		case webhook.UnfollowEvent:
+			switch s := e.Source.(type) {
+			case webhook.UserSource:
+				// ユーザーが友達追加した時の処理
+				err := userController.DeleteUser(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+			}
 		}
 	}
 }
