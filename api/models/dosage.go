@@ -23,7 +23,7 @@ type MedicationListForGetMedications struct {
 	Time     string `json:"time"`
 }
 
-func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedications, error) {
+func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedications, error) {
 	stmt, err := dr.repo.Prepare(
 		`
 				SELECT
@@ -40,14 +40,14 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 				ON
 					dosage.time_id = time.id
 				WHERE
-					users.auth_key = $1
+					users.line_user_id = $1;
 				`)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(authKey)
+	rows, err := stmt.Query(userId)
 	if err != nil {
 		return nil, err
 	}

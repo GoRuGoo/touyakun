@@ -38,7 +38,7 @@ func TestGetMedications(t *testing.T) {
 	repo := InitializeDosageRepo(tx)
 
 	// GetMedicationsメソッドをテスト
-	medications, err := repo.GetMedications("test_auth")
+	medications, err := repo.GetMedications("test_id")
 	if err != nil {
 		tx.Rollback()
 		t.Fatalf("Failed to get medications: %v", err)
