@@ -13,7 +13,8 @@ func InitializeDosageRepo(db SqlExecutor) *DosageRepo {
 }
 
 type DosageModel interface {
-	GetMedications(authKey string) ([]MedicationListForGetMedications, error)
+	GetMedications(userId string) ([]MedicationListForGetMedications, error)
+	DeleteMedications(userId string, dosageId int) error
 }
 
 type MedicationListForGetMedications struct {
@@ -23,7 +24,7 @@ type MedicationListForGetMedications struct {
 	Time     string `json:"time"`
 }
 
-func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedications, error) {
+func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedications, error) {
 	stmt, err := dr.repo.Prepare(
 		`
 				SELECT
@@ -40,14 +41,14 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 				ON
 					dosage.time_id = time.id
 				WHERE
-					users.auth_key = $1
+					users.line_user_id = $1;
 				`)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(authKey)
+	rows, err := stmt.Query(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,4 +91,28 @@ func (dr *DosageRepo) GetMedications(authKey string) ([]MedicationListForGetMedi
 	}
 
 	return medications, nil
+}
+
+func (dr *DosageRepo) DeleteMedications(userId string, dosageId int) error {
+	stmt, err := dr.repo.Prepare(
+		`
+			DELETE
+			FROM
+				dosage
+			WHERE
+				dosage.id = $1
+			AND
+				dosage.user_id = (SELECT id FROM users WHERE line_user_id = $2);
+			`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(dosageId, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

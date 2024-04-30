@@ -38,7 +38,7 @@ func TestGetMedications(t *testing.T) {
 	repo := InitializeDosageRepo(tx)
 
 	// GetMedicationsメソッドをテスト
-	medications, err := repo.GetMedications("test_auth")
+	medications, err := repo.GetMedications("test_id")
 	if err != nil {
 		tx.Rollback()
 		t.Fatalf("Failed to get medications: %v", err)
@@ -66,6 +66,52 @@ func TestGetMedications(t *testing.T) {
 			t.Errorf("Unexpected result: got %+v, want %+v", medication, expected[i])
 		}
 	}
+	tx.Rollback()
+}
+
+func TestDeleteMedications(t *testing.T) {
+	// Connect to the database
+	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
+	if err != nil {
+		t.Fatalf("Failed to connect to DB: %v", err)
+	}
+	defer db.Close()
+
+	// Begin a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	// Load the test data
+	traitSql, err := ReadSQLFile("./testdata/dosage_test.sql")
+	if err != nil {
+		t.Fatalf("Failed to read SQL file: %v", err)
+	}
+	_, err = tx.Exec(traitSql)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	// Initialize the DosageRepo
+	repo := InitializeDosageRepo(tx)
+
+	// Call the DeleteMedications method
+	err = repo.DeleteMedications("test_id", 1)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to delete medication: %v", err)
+	}
+
+	// Check if the medication was deleted successfully
+	medications, err := repo.GetMedications("test_id")
+	// If the medication was deleted successfully, the length of medications should be 0
+	if err == nil {
+		tx.Rollback()
+		t.Fatalf("Expected no medications, but got %d", len(medications))
+	}
+
 	tx.Rollback()
 }
 
