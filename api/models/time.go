@@ -38,7 +38,7 @@ func (tr *TimeRepo) DeleteTime(lineUserId string, id int) error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(id, authKey)
+	res, err := stmt.Exec(id, lineUserId)
 	if err != nil {
 		return err
 	}

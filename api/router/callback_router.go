@@ -6,7 +6,6 @@ import (
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
 	"net/http"
-	"touyakun/controllers"
 	"touyakun/models"
 )
 
@@ -49,7 +48,6 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModel := models.InitializeUserRepo(app.db)
-	userController := controllers.InitializeUserController(userModel, w)
 
 	for _, event := range cb.Events {
 		switch e := event.(type) {
@@ -57,14 +55,51 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
 				// ユーザーが友達追加した時の処理
-				userController.RegisterUser(s.UserId)
+				isNotExist, err := userModel.IsNotExistUser(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					w.Write([]byte(err.Error()))
+					return
+				}
+
+				if !isNotExist {
+					w.WriteHeader(409)
+					w.Write([]byte("user already exists"))
+					return
+				}
+
+				err = userModel.RegisterUser(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					w.Write([]byte(err.Error()))
+					return
+				}
 			}
 		case webhook.UnfollowEvent:
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
 				// ユーザーが友達追加した時の処理
-				userController.DeleteUser(s.UserId)
+				isNotExist, err := userModel.IsNotExistUser(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					w.Write([]byte(err.Error()))
+					return
+				}
+
+				if isNotExist {
+					w.WriteHeader(404)
+					w.Write([]byte("user does not exist"))
+					return
+				}
+
+				err = userModel.DeleteUser(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					w.Write([]byte(err.Error()))
+					return
+				}
 			}
 		}
 	}
+	return
 }
