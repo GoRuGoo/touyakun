@@ -14,3 +14,4 @@ RUN touch .air.toml
 
 EXPOSE 8080
 
+CMD [ "air","-c",".air.toml" ]

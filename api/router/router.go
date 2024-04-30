@@ -9,7 +9,7 @@ import (
 )
 
 func InitializeRouter() {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
+	db, err := sql.Open("postgres", "host=db port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
