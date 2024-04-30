@@ -3,10 +3,13 @@ package router
 import (
 	"database/sql"
 	"errors"
+	"net/http"
+	"net/url"
+	"touyakun/controllers"
+	"touyakun/models"
+
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
-	"net/http"
-	"touyakun/models"
 )
 
 type LINEConfig struct {
@@ -48,9 +51,11 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModel := models.InitializeUserRepo(app.db)
+	dosageModel := models.InitializeDosageRepo(app.db)
+	userController := controllers.InitializeUserController(userModel, w)
 
 	for _, event := range cb.Events {
-		switch e := event.(type) {
+		switch e := event.(type){
 		case webhook.FollowEvent:
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
@@ -98,6 +103,42 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					w.Write([]byte(err.Error()))
 					return
 				}
+			}
+		case webhook.PostbackEvent:
+			data := e.Postback.Data
+			// dataはURLパラメータの形式で書かれているので、パースする
+			// 例: "action=buy&itemid=123"
+			u, err := url.ParseQuery(data)
+			if err != nil {
+				w.WriteHeader(500)
+				return
+			}
+			switch u.Get("action") {
+			case "delete":
+				// 薬の一覧を取得
+				s := e.Source.(webhook.UserSource)
+				medications, err := dosageModel.GetMedications(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				//ユーザーにどの薬を消すかFlex Messageを使って質問
+				contents:=&messaging_api.FlexCarousel{
+					Contents: []messaging_api.FlexBubble{
+						{
+							Body:
+						},
+					},
+				}
+				app.bot.ReplyMessage(
+					&messaging_api.ReplyMessageRequest{
+						ReplyToken: e.ReplyToken,
+						Messages: []messaging_api.MessageInterface{&messaging_api.FlexMessage{
+							Contents: contents,
+							AltText:  "Flex message alt text",
+						}},
+					},
+				)
 			}
 		}
 	}
