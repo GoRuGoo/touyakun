@@ -13,7 +13,8 @@ func InitializeDosageRepo(db SqlExecutor) *DosageRepo {
 }
 
 type DosageModel interface {
-	GetMedications(authKey string) ([]MedicationListForGetMedications, error)
+	GetMedications(userId string) ([]MedicationListForGetMedications, error)
+	DeleteMedications(authKey string) error
 }
 
 type MedicationListForGetMedications struct {
