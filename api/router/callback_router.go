@@ -3,6 +3,7 @@ package router
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"touyakun/controllers"
@@ -55,7 +56,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 	userController := controllers.InitializeUserController(userModel, w)
 
 	for _, event := range cb.Events {
-		switch e := event.(type){
+		switch e := event.(type) {
 		case webhook.FollowEvent:
 			switch s := e.Source.(type) {
 			case webhook.UserSource:
@@ -113,6 +114,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
 				return
 			}
+			// TODO: medication_idがついていたら削除処理を行う
 			switch u.Get("action") {
 			case "delete":
 				// 薬の一覧を取得
@@ -123,20 +125,53 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				//ユーザーにどの薬を消すかFlex Messageを使って質問
-				contents:=&messaging_api.FlexCarousel{
-					Contents: []messaging_api.FlexBubble{
-						{
-							Body:
-						},
-					},
+				morningAmount := 0
+				afternoonAmount := 0
+				eveningAmount := 0
+				if medications.morningFlg {
+					morningAmount := medications.Amount
+				}
+				if medications.afternoonFlg {
+					afternoonAmount := medications.Amount
+				}
+				if medications.eveningFlg {
+					eveningAmount := medications.Amount
+				}
+				contents := []messaging_api.FlexBubble{}
+				for _, medication := range medications {
+					contents = append(contents, messaging_api.FlexBubble{
+						Body: &messaging_api.FlexBox{
+							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
+							Contents: []messaging_api.FlexComponentInterface{
+								&messaging_api.FlexText{
+									Text:   medication.Name,
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								},
+								&messaging_api.FlexButton{
+									Action: &messaging_api.PostbackAction{
+										Label: "削除",
+										Data:  fmt.Sprintf("action=delete&medication_id=%d", medication.Id),
+									},
+								},
+							},
+						}})
 				}
 				app.bot.ReplyMessage(
 					&messaging_api.ReplyMessageRequest{
 						ReplyToken: e.ReplyToken,
-						Messages: []messaging_api.MessageInterface{&messaging_api.FlexMessage{
-							Contents: contents,
-							AltText:  "Flex message alt text",
-						}},
+						Messages: []messaging_api.MessageInterface{
+							&messaging_api.FlexMessage{
+								Contents: &messaging_api.FlexCarousel{
+									Contents: contents,
+								},
+								AltText: "Flex message alt text",
+							}},
 					},
 				)
 			}
