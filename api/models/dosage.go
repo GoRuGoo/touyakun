@@ -14,7 +14,7 @@ func InitializeDosageRepo(db SqlExecutor) *DosageRepo {
 
 type DosageModel interface {
 	GetMedications(userId string) ([]MedicationListForGetMedications, error)
-	DeleteMedications(authKey string) error
+	DeleteMedications(userId string, dosageId int) error
 }
 
 type MedicationListForGetMedications struct {
@@ -91,4 +91,28 @@ func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedic
 	}
 
 	return medications, nil
+}
+
+func (dr *DosageRepo) DeleteMedications(userId string, dosageId int) error {
+	stmt, err := dr.repo.Prepare(
+		`
+			DELETE
+			FROM
+				dosage
+			WHERE
+				dosage.id = $1
+			AND
+				dosage.user_id = (SELECT id FROM users WHERE line_user_id = $2);
+			`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(dosageId, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
