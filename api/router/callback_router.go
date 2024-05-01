@@ -115,7 +115,6 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			s := e.Source.(webhook.UserSource)
-			// TODO: medication_idがついていたら削除処理を行う
 			switch u.Get("action") {
 			case "delete":
 				// 薬の一覧を取得
