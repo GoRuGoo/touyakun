@@ -214,7 +214,12 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				}
 				utils.ReplyTemplateMessage(app.bot, w, e.ReplyToken, template)
 			case "registerTime":
-				parsedTime, err := time.Parse("15:04", e.Postback.Params["time"])
+				timeParam, found := e.Postback.Params["time"]
+				if !found {
+					w.WriteHeader(500)
+					return
+				}
+				parsedTime, err := time.Parse("15:04", timeParam)
 				if err != nil {
 					w.WriteHeader(500)
 					return
