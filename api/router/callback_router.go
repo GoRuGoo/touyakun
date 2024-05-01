@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 	"touyakun/models"
 	"touyakun/utils"
 
@@ -54,6 +55,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 
 	userModel := models.InitializeUserRepo(app.db)
 	dosageModel := models.InitializeDosageRepo(app.db)
+	timeModel := models.InitializeTimeRepo(app.db)
 
 	for _, event := range cb.Events {
 		switch e := event.(type) {
@@ -180,38 +182,62 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					Text: "削除しました",
 				})
 			case "settime":
+				times, err := timeModel.GetMedicationRemindTimeList(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
 				// どの時間を変えたいか選択する
 				template := &messaging_api.ButtonsTemplate{
 					Title: "通知時刻変更",
-					Text:  "どの時刻を変更する？",
+					Text:  "どの時刻を変更する？ 変更したいところをタップ！",
 					Actions: []messaging_api.ActionInterface{
 						&messaging_api.DatetimePickerAction{
-							Label:   "朝の時刻を設定",
-							Data:    "action=setMorning",
-							Initial: "08:00",
+							Label:   "朝：(現在の設定:" + times.MorningTime + ")",
+							Data:    "action=registerTime&time=morning",
+							Initial: times.MorningTime,
 							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
 						},
 						&messaging_api.DatetimePickerAction{
-							Label:   "昼の時刻を設定",
-							Data:    "action=setAfternoon",
-							Initial: "12:00",
+							Label:   "昼：(現在の設定:" + times.AfternoonTime + ")",
+							Data:    "action=registerTime&time=afternoon",
+							Initial: times.AfternoonTime,
 							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
 						},
 						&messaging_api.DatetimePickerAction{
-							Label:   "夜の時刻を設定",
-							Data:    "action=setEvening",
-							Initial: "20:00",
+							Label:   "夜：(現在の設定:" + times.EveningTime + ")",
+							Data:    "action=registerTime&time=evening",
+							Initial: times.EveningTime,
 							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
 						},
 					},
 				}
 				utils.ReplyTemplateMessage(app.bot, w, e.ReplyToken, template)
-				// case "setMorning":
-				// 	// 朝の時間を変更する
-				// case: "setAfternoon":
-				// 	// 昼の時間を変更する
-				// case: "setEvening":
-				// 	// 夜の時間を変更する
+			case "registerTime":
+				parsedTime, err := time.Parse("15:04", e.Postback.Params["time"])
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				timeText := ""
+				switch u.Get("time") {
+				case "morning":
+					err = timeModel.RegisterMorningTime(s.UserId, parsedTime)
+					timeText = "朝"
+				case "afternoon":
+					err = timeModel.RegisterAfternoonTime(s.UserId, parsedTime)
+					timeText = "昼"
+				case "evening":
+					err = timeModel.RegisterEveningTime(s.UserId, parsedTime)
+					timeText = "夜"
+				}
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+					Text: timeText + "の時刻を" + parsedTime.Format("15:04") + "に設定しました！",
+				})
 			}
 		}
 	}
