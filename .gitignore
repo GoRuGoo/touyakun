@@ -7,3 +7,4 @@ poetry.lock
 .idea/
 .env
 touyakun-credentials.json
+exec_dosage_data.sql

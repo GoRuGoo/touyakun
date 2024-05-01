@@ -3,10 +3,15 @@ package router
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"touyakun/models"
+	"touyakun/utils"
+
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
-	"net/http"
-	"touyakun/models"
 )
 
 type LINEConfig struct {
@@ -48,6 +53,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userModel := models.InitializeUserRepo(app.db)
+	dosageModel := models.InitializeDosageRepo(app.db)
 
 	for _, event := range cb.Events {
 		switch e := event.(type) {
@@ -99,7 +105,81 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
+		case webhook.PostbackEvent:
+			data := e.Postback.Data
+			// dataはURLパラメータの形式で書かれているので、パースする
+			// 例: "action=buy&itemid=123"
+			u, err := url.ParseQuery(data)
+			if err != nil {
+				w.WriteHeader(500)
+				return
+			}
+			s := e.Source.(webhook.UserSource)
+			switch u.Get("action") {
+			case "delete":
+				// 薬の一覧を取得
+				medications, err := dosageModel.GetMedications(s.UserId)
+				if err != nil {
+					utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+						Text: "登録されている薬はありません",
+					})
+					return
+				}
+				//ユーザーにどの薬を消すかFlex Messageを使って質問
+				contents := []messaging_api.FlexBubble{}
+				for _, medication := range medications {
+					morningAmount := 0
+					afternoonAmount := 0
+					eveningAmount := 0
+					if medication.IsMorning {
+						morningAmount = medication.Amount
+					}
+					if medication.IsAfternoon {
+						afternoonAmount = medication.Amount
+					}
+					if medication.IsEvening {
+						eveningAmount = medication.Amount
+					}
+					contents = append(contents, messaging_api.FlexBubble{
+						Body: &messaging_api.FlexBox{
+							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
+							Contents: []messaging_api.FlexComponentInterface{
+								&messaging_api.FlexText{
+									Text:   medication.Name,
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								},
+								&messaging_api.FlexButton{
+									Action: &messaging_api.PostbackAction{
+										Label: "削除",
+										Data:  fmt.Sprintf("action=deleteById&medication_id=%d", medication.Id),
+									},
+								},
+							},
+						}})
+				}
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
+			case "deleteById":
+				medicationId := u.Get("medication_id")
+				id, err := strconv.Atoi(medicationId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				err = dosageModel.DeleteMedications(s.UserId, id)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+					Text: "削除しました",
+				})
+			}
 		}
 	}
-	return
 }
