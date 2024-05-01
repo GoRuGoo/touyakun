@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"time"
 )
 
@@ -14,71 +13,86 @@ func InitializeTimeRepo(db SqlExecutor) *TimeRepo {
 }
 
 type TimeModel interface {
-	DeleteTime(lineUserId string, id int) error
-	RegisterTime(lineUserId string, time time.Time, isMorning, isAfternoon, isEvening bool) error
-}
-
-func (tr *TimeRepo) DeleteTime(lineUserId string, id int) error {
-	stmt, err := tr.repo.Prepare(
-		`
-			DELETE
-			FROM
-				time
-			USING
-				users
-			WHERE
-				time.id = $1
-			AND
-				time.user_id = users.id
-			AND 
-				users.auth_key = $2
-			`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	res, err := stmt.Exec(id, lineUserId)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rowsAffected == 0 {
-		return errors.New("no rows were deleted")
-	}
-
-	return nil
+	RegisterMorningTime(lineUserId string, insertTime time.Time) error
+	RegisterAfternonnTime(lineUserId string, insertTime time.Time) error
+	RegisterEveningTime(lineUserId string, insertTime time.Time) error
 }
 
 type MedicationNotificationTimeInfoForInsertData struct {
-	lineUserId  string
 	time        time.Time
 	isMorning   bool
 	isAfternoon bool
 	isEvening   bool
 }
 
-func (tr *TimeRepo) RegisterTime(lineUserId string, mn MedicationNotificationTimeInfoForInsertData) error {
-	formattedRFC3339Time := mn.time.Format(time.RFC3339)
+func (tr *TimeRepo) RegisterMorningTime(lineUserId string, insertTime time.Time) error {
+	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
 
 	stmt, err := tr.repo.Prepare(
 		`
-			INSERT INTO
-				time(user_id, time, is_morning, is_afternoon, is_evening)
-			VALUES
-				((SELECT id FROM users WHERE line_user_id = $1), $2, $3, $4, $5)
+			UPDATE
+				users
+			SET
+				morning_medication_time = $1
+			WHERE
+				line_user_id = $2
 			`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(lineUserId, formattedRFC3339Time, mn.isMorning, mn.isAfternoon, mn.isEvening)
+	_, err = stmt.Exec(formattedRFC3339Time, lineUserId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tr *TimeRepo) RegisterAfternonnTime(lineUserId string, insertTime time.Time) error {
+	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
+
+	stmt, err := tr.repo.Prepare(
+		`
+			UPDATE
+			    users
+			SET
+				afternoon_medication_time = $1
+			WHERE
+				line_user_id = $2
+			`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(formattedRFC3339Time, lineUserId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tr *TimeRepo) RegisterEveningTime(lineUserId string, insertTime time.Time) error {
+	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
+
+	stmt, err := tr.repo.Prepare(
+		`
+			UPDATE
+			    users
+			SET
+				evening_medication_time = $1
+			WHERE
+				line_user_id = $2
+			`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(formattedRFC3339Time, lineUserId)
 	if err != nil {
 		return err
 	}
