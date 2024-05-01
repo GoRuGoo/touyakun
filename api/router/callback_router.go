@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"touyakun/controllers"
 	"touyakun/models"
 
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
@@ -54,7 +53,6 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 
 	userModel := models.InitializeUserRepo(app.db)
 	dosageModel := models.InitializeDosageRepo(app.db)
-	userController := controllers.InitializeUserController(userModel, w)
 
 	for _, event := range cb.Events {
 		switch e := event.(type) {
@@ -126,20 +124,21 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				//ユーザーにどの薬を消すかFlex Messageを使って質問
-				morningAmount := 0
-				afternoonAmount := 0
-				eveningAmount := 0
-				if medications.morningFlg {
-					morningAmount := medications.Amount
-				}
-				if medications.afternoonFlg {
-					afternoonAmount := medications.Amount
-				}
-				if medications.eveningFlg {
-					eveningAmount := medications.Amount
-				}
+
 				contents := []messaging_api.FlexBubble{}
 				for _, medication := range medications {
+					morningAmount := 0
+					afternoonAmount := 0
+					eveningAmount := 0
+					if medication.IsMorning {
+						morningAmount = medication.Amount
+					}
+					if medication.IsAfternoon {
+						afternoonAmount = medication.Amount
+					}
+					if medication.IsEvening {
+						eveningAmount = medication.Amount
+					}
 					contents = append(contents, messaging_api.FlexBubble{
 						Body: &messaging_api.FlexBox{
 							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
