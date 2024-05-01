@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"touyakun/models"
+	"touyakun/utils"
 
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
@@ -120,11 +121,12 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				// 薬の一覧を取得
 				medications, err := dosageModel.GetMedications(s.UserId)
 				if err != nil {
-					w.WriteHeader(500)
+					utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+						Text: "登録されている薬はありません",
+					})
 					return
 				}
 				//ユーザーにどの薬を消すかFlex Messageを使って質問
-
 				contents := []messaging_api.FlexBubble{}
 				for _, medication := range medications {
 					morningAmount := 0
@@ -162,18 +164,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 							},
 						}})
 				}
-				app.bot.ReplyMessage(
-					&messaging_api.ReplyMessageRequest{
-						ReplyToken: e.ReplyToken,
-						Messages: []messaging_api.MessageInterface{
-							&messaging_api.FlexMessage{
-								Contents: &messaging_api.FlexCarousel{
-									Contents: contents,
-								},
-								AltText: "Flex message alt text",
-							}},
-					},
-				)
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
 			case "deleteById":
 				medicationId := u.Get("medication_id")
 				id, err := strconv.Atoi(medicationId)
@@ -186,19 +177,10 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(500)
 					return
 				}
-				// 削除が成功したらメッセージを送信
-				app.bot.ReplyMessage(
-					&messaging_api.ReplyMessageRequest{
-						ReplyToken: e.ReplyToken,
-						Messages: []messaging_api.MessageInterface{
-							&messaging_api.TextMessage{
-								Text: "削除しました",
-							},
-						},
-					},
-				)
+				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+					Text: "削除しました",
+				})
 			}
 		}
 	}
-	return
 }
