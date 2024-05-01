@@ -18,12 +18,6 @@ type TimeModel interface {
 	RegisterEveningTime(lineUserId string, insertTime time.Time) error
 }
 
-type MedicationNotificationTimeInfoForInsertData struct {
-	time        time.Time
-	isMorning   bool
-	isAfternoon bool
-	isEvening   bool
-}
 
 func (tr *TimeRepo) RegisterMorningTime(lineUserId string, insertTime time.Time) error {
 	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
