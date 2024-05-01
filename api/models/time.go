@@ -46,9 +46,9 @@ func (tr *TimeRepo) GetMedicationRemindTimeList(lineUserId string) (MedicationRe
 		return MedicationRemindTimeList{}, err
 	}
 
-	varidatedMorningTime := morningTime.Format(time.TimeOnly)
-	varidatedAfternoonTime := afternoonTime.Format(time.TimeOnly)
-	varidatedEveningTime := eveningTime.Format(time.TimeOnly)
+	varidatedMorningTime := morningTime.Format("15:04")
+	varidatedAfternoonTime := afternoonTime.Format("15:04")
+	varidatedEveningTime := eveningTime.Format("15:04")
 
 	return MedicationRemindTimeList{
 		MorningTime:   varidatedMorningTime,
