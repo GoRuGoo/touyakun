@@ -179,6 +179,39 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
 					Text: "削除しました",
 				})
+			case "settime":
+				// どの時間を変えたいか選択する
+				template := &messaging_api.ButtonsTemplate{
+					Title: "通知時刻変更",
+					Text:  "どの時刻を変更する？",
+					Actions: []messaging_api.ActionInterface{
+						&messaging_api.DatetimePickerAction{
+							Label:   "朝の時刻を設定",
+							Data:    "action=setMorning",
+							Initial: "08:00",
+							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+						},
+						&messaging_api.DatetimePickerAction{
+							Label:   "昼の時刻を設定",
+							Data:    "action=setAfternoon",
+							Initial: "12:00",
+							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+						},
+						&messaging_api.DatetimePickerAction{
+							Label:   "夜の時刻を設定",
+							Data:    "action=setEvening",
+							Initial: "20:00",
+							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+						},
+					},
+				}
+				utils.ReplyTemplateMessage(app.bot, w, e.ReplyToken, template)
+				// case "setMorning":
+				// 	// 朝の時間を変更する
+				// case: "setAfternoon":
+				// 	// 昼の時間を変更する
+				// case: "setEvening":
+				// 	// 夜の時間を変更する
 			}
 		}
 	}
