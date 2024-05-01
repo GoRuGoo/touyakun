@@ -82,7 +82,7 @@ func (tr *TimeRepo) RegisterMorningTime(lineUserId string, insertTime time.Time)
 	return nil
 }
 
-func (tr *TimeRepo) RegisterAfternonnTime(lineUserId string, insertTime time.Time) error {
+func (tr *TimeRepo) RegisterAfternoonTime(lineUserId string, insertTime time.Time) error {
 	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
 
 	stmt, err := tr.repo.Prepare(
