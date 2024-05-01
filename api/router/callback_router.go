@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"touyakun/controllers"
 	"touyakun/models"
 
@@ -114,11 +115,11 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
 				return
 			}
+			s := e.Source.(webhook.UserSource)
 			// TODO: medication_idがついていたら削除処理を行う
 			switch u.Get("action") {
 			case "delete":
 				// 薬の一覧を取得
-				s := e.Source.(webhook.UserSource)
 				medications, err := dosageModel.GetMedications(s.UserId)
 				if err != nil {
 					w.WriteHeader(500)
@@ -176,6 +177,27 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				)
 			case "deleteById":
 				medicationId := u.Get("medication_id")
+				id, err := strconv.Atoi(medicationId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				err = dosageModel.DeleteMedications(s.UserId, id)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				// 削除が成功したらメッセージを送信
+				app.bot.ReplyMessage(
+					&messaging_api.ReplyMessageRequest{
+						ReplyToken: e.ReplyToken,
+						Messages: []messaging_api.MessageInterface{
+							&messaging_api.TextMessage{
+								Text: "削除しました",
+							},
+						},
+					},
+				)
 			}
 		}
 	}
