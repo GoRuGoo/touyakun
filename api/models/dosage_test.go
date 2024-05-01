@@ -118,7 +118,7 @@ func TestDeleteMedications(t *testing.T) {
 	tx.Rollback()
 }
 
-func TestMedi(t *testing.T) {
+func TestGettingAnErrorWhenTryingToDeleteARecordThatDoesNotExist(t *testing.T) {
 	// Connect to the database
 	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
 	if err != nil {
