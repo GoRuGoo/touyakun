@@ -47,10 +47,13 @@ func TestGetMedications(t *testing.T) {
 	// 期待する結果
 	expected := []MedicationListForGetMedications{
 		{
-			Name:     "トラネキサム",
-			Amount:   1,
-			Duration: 3,
-			Time:     "morning",
+			Id:          1,
+			Name:        "トラネキサム",
+			Amount:      2,
+			Duration:    7,
+			IsMorning:   true,
+			IsAfternoon: false,
+			IsEvening:   true,
 		},
 	}
 
