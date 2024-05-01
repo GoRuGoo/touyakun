@@ -87,9 +87,9 @@ func (dr *DosageRepo) DeleteMedications(userId string, dosageId int) error {
 			FROM
 				dosage
 			WHERE
-				dosage.id = $1
+				id = $1
 			AND
-				dosage.user_id = (SELECT id FROM users WHERE line_user_id = $2);
+				user_id = (SELECT id FROM users WHERE line_user_id = $2);
 			`)
 	if err != nil {
 		return err
