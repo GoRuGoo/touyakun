@@ -8,16 +8,12 @@ import (
 )
 
 func ReplyFlexCarouselMessage(bot *messaging_api.MessagingApiAPI, w http.ResponseWriter, replyToken string, contents []messaging_api.FlexBubble) {
-	err := replyMessage(bot, w, replyToken, &messaging_api.FlexMessage{
+	replyMessage(bot, w, replyToken, &messaging_api.FlexMessage{
 		Contents: &messaging_api.FlexCarousel{
 			Contents: contents,
 		},
 		AltText: "Flex message alt text",
 	})
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
 }
 
 func ReplyTextMessage(bot *messaging_api.MessagingApiAPI, w http.ResponseWriter, replyToken string, textMessage *messaging_api.TextMessage) {
