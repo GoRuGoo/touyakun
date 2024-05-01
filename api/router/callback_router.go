@@ -156,7 +156,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								&messaging_api.FlexButton{
 									Action: &messaging_api.PostbackAction{
 										Label: "削除",
-										Data:  fmt.Sprintf("action=delete&medication_id=%d", medication.Id),
+										Data:  fmt.Sprintf("action=deleteById&medication_id=%d", medication.Id),
 									},
 								},
 							},
@@ -174,6 +174,8 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 							}},
 					},
 				)
+			case "deleteById":
+				medicationId := u.Get("medication_id")
 			}
 		}
 	}
