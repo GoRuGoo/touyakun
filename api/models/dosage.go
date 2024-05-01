@@ -97,9 +97,18 @@ func (dr *DosageRepo) DeleteMedications(userId string, dosageId int) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(dosageId, userId)
+	res, err := stmt.Exec(dosageId, userId)
 	if err != nil {
 		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return errors.New("Record not found.")
 	}
 
 	return nil
