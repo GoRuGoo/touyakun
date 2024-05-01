@@ -48,11 +48,11 @@ func TestGetMedications(t *testing.T) {
 	expected := []MedicationListForGetMedications{
 		{
 			Name:        "トラネキサム",
-			Amount:      1,
-			Duration:    3,
+			Amount:      2,
+			Duration:    7,
 			IsMorning:   true,
 			IsAfternoon: false,
-			IsEvening:   false,
+			IsEvening:   true,
 		},
 	}
 

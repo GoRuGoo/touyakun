@@ -32,17 +32,13 @@ func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedic
 		`
 				SELECT
 					dosage.name,dosage.amount,dosage.duration,
-					time.morning_flg,time.afternoon_flg,time.evening_flg
+					dosage.morning_flg,dosage.afternoon_flg,dosage.evening_flg
 				FROM
 					dosage
 				INNER JOIN
 					users
 				ON
 					dosage.user_id = users.id
-				INNER JOIN
-					time
-				ON
-					dosage.time_id = time.id
 				WHERE
 					users.line_user_id = $1;
 				`)
