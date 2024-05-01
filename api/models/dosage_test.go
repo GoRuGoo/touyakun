@@ -118,6 +118,44 @@ func TestDeleteMedications(t *testing.T) {
 	tx.Rollback()
 }
 
+func TestMedi(t *testing.T) {
+	// Connect to the database
+	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
+	if err != nil {
+		t.Fatalf("Failed to connect to DB: %v", err)
+	}
+	defer db.Close()
+
+	// Begin a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	// Load the test data
+	traitSql, err := ReadSQLFile("./testdata/dosage_test.sql")
+	if err != nil {
+		t.Fatalf("Failed to read SQL file: %v", err)
+	}
+	_, err = tx.Exec(traitSql)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	// Initialize the DosageRepo
+	repo := InitializeDosageRepo(tx)
+
+	// Call the DeleteMedications method
+	err = repo.DeleteMedications("test_id", 3343214)
+	if err == nil {
+		tx.Rollback()
+		t.Fatalf("Expected an error, but got none")
+	}
+
+	tx.Rollback()
+}
+
 func ReadSQLFile(path string) (string, error) {
 	// ファイルを読み込む
 	data, err := ioutil.ReadFile(path)
