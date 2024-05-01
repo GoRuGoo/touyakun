@@ -47,6 +47,7 @@ func TestGetMedications(t *testing.T) {
 	// 期待する結果
 	expected := []MedicationListForGetMedications{
 		{
+			Id:          1,
 			Name:        "トラネキサム",
 			Amount:      2,
 			Duration:    7,

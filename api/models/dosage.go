@@ -18,6 +18,7 @@ type DosageModel interface {
 }
 
 type MedicationListForGetMedications struct {
+	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Amount      int    `json:"amount"`
 	Duration    int    `json:"duration"`
@@ -31,7 +32,7 @@ func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedic
 	stmt, err := dr.repo.Prepare(
 		`
 				SELECT
-					dosage.name,dosage.amount,dosage.duration,
+					dosage.id ,dosage.name,dosage.amount,dosage.duration,
 					dosage.morning_flg,dosage.afternoon_flg,dosage.evening_flg
 				FROM
 					dosage
@@ -64,7 +65,7 @@ func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedic
 		//レスポンス用の構造体をappendして構造体配列にして返す
 		var medication MedicationListForGetMedications
 
-		err := rows.Scan(&medication.Name, &medication.Amount, &medication.Duration, &medication.IsMorning, &medication.IsAfternoon, &medication.IsEvening)
+		err := rows.Scan(&medication.Id, &medication.Name, &medication.Amount, &medication.Duration, &medication.IsMorning, &medication.IsAfternoon, &medication.IsEvening)
 		if err != nil {
 			return nil, err
 		}
