@@ -46,9 +46,9 @@ func (tr *TimeRepo) GetMedicationRemindTimeList(lineUserId string) (MedicationRe
 		return MedicationRemindTimeList{}, err
 	}
 
-	varidatedMorningTime := morningTime.Format(time.TimeOnly)
-	varidatedAfternoonTime := afternoonTime.Format(time.TimeOnly)
-	varidatedEveningTime := eveningTime.Format(time.TimeOnly)
+	varidatedMorningTime := morningTime.Format("15:04")
+	varidatedAfternoonTime := afternoonTime.Format("15:04")
+	varidatedEveningTime := eveningTime.Format("15:04")
 
 	return MedicationRemindTimeList{
 		MorningTime:   varidatedMorningTime,
@@ -82,7 +82,7 @@ func (tr *TimeRepo) RegisterMorningTime(lineUserId string, insertTime time.Time)
 	return nil
 }
 
-func (tr *TimeRepo) RegisterAfternonnTime(lineUserId string, insertTime time.Time) error {
+func (tr *TimeRepo) RegisterAfternoonTime(lineUserId string, insertTime time.Time) error {
 	formattedRFC3339Time := insertTime.Format(time.TimeOnly)
 
 	stmt, err := tr.repo.Prepare(

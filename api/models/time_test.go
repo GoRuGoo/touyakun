@@ -124,7 +124,7 @@ func TestRegisterAfternoonTime(t *testing.T) {
 	testLineUserId := "test_id"
 	testTime := time.Now()
 
-	err = repo.RegisterAfternonnTime(testLineUserId, testTime)
+	err = repo.RegisterAfternoonTime(testLineUserId, testTime)
 	if err != nil {
 		tx.Rollback()
 		t.Fatalf("Failed to register morning time: %v", err)
