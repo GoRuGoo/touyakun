@@ -268,12 +268,15 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 			switch message := e.Message.(type) {
 			case webhook.ImageMessageContent:
 				// 薬の情報をAPIから取得
-				content, err := app.blob.GetMessageContentTranscodingByMessageId(message.Id)
+				// content, err := app.blob.GetMessageContent(message.Id)
+
+				resp, err := http.Get("http://ai:8080/medicationsByUrl?messageId=" + message.Id)
 				if err != nil {
 					w.WriteHeader(500)
 					return
 				}
-				fmt.Println(content)
+				fmt.Println(resp)
+
 				// app.bot.ShowLoadingAnimation(&messaging_api.ShowLoadingAnimationRequest{
 				// 	ChatId:         s.UserId,
 				// 	LoadingSeconds: 10,

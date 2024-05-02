@@ -8,3 +8,7 @@ router = APIRouter()
 @router.post("/medications/", tags=["medications"], response_model=Medications)
 async def recognize_medications(file: UploadFile):
     return await GeminiRecognitionController.get_medications(file)
+
+@router.get("/medicationsByUrl", tags=["medications"], response_model=Medications)
+async def recognize_medications_url(messageId:str):
+    return await GeminiRecognitionController.get_medications_url(messageId)
