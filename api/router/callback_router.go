@@ -269,18 +269,27 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 			case webhook.ImageMessageContent:
 				// 薬の情報をAPIから取得
 				// content, err := app.blob.GetMessageContent(message.Id)
-
+				s := e.Source.(webhook.UserSource)
+				app.bot.ShowLoadingAnimation(&messaging_api.ShowLoadingAnimationRequest{
+					ChatId:         s.UserId,
+					LoadingSeconds: 10,
+				})
 				resp, err := http.Get("http://ai:8080/medicationsByUrl?messageId=" + message.Id)
 				if err != nil {
 					w.WriteHeader(500)
 					return
 				}
-				fmt.Println(resp)
+				defer resp.Body.Close()
+				if resp.StatusCode != 200 {
+					utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+						Text: "画像から薬の情報を取得できませんでした",
+					})
+					w.WriteHeader(500)
+					return
+				}
 
-				// app.bot.ShowLoadingAnimation(&messaging_api.ShowLoadingAnimationRequest{
-				// 	ChatId:         s.UserId,
-				// 	LoadingSeconds: 10,
-				// })
+				fmt.Println(resp.Body)
+
 			}
 		}
 	}

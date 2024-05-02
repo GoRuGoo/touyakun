@@ -1,10 +1,12 @@
-from vertexai.preview.generative_models import GenerativeModel, Image, Part
+from vertexai.preview.generative_models import GenerativeModel, Image
 from app.schemas.medications import Medications, Medication
 import json
 from typing import AsyncIterable, Union
 from app.exception.errors import RecognitionException
-from urllib.request import urlopen, Request
+from urllib import request
 import os
+
+
 class GeminiRecognitionService:
     __model = GenerativeModel("gemini-pro-vision")  # 未来の自分が治す
 
@@ -24,17 +26,20 @@ class GeminiRecognitionService:
 
     @staticmethod
     async def get_medications_url(messageId: str):
-        url = "https://api-data.line.me/v2/bot/message/{messageId}/content"
-        headers = {
-            "Authorization": "Bearer "+ os.environ["CHANNEL_TOKEN"]
-        }
-        img = Image.from_bytes(urlopen(Request(url, headers=headers)).read()) #これが違うはず
+        url = "https://api-data.line.me/v2/bot/message/" + messageId + "/content"
+        headers = {"Authorization": "Bearer " + os.environ["CHANNEL_TOKEN"]}
+        get_req = request.Request(url, headers=headers)
+        print(get_req.headers, get_req.full_url)
+        with request.urlopen(get_req) as response:
+            img = Image.from_bytes(response.read())
+            print(img)
         json_dict = await GeminiRecognitionService.recognize(img)
         # Medicationsオブジェクトに変換して返す
         medications = []
         for med in json_dict["medications"]:
             medications.append(Medication(**med))
         return Medications(medications=medications)
+
     @staticmethod
     async def recognize(img: Image):
         # VertexAIのAPIを呼ぶ
