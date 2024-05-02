@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 class Medication(BaseModel):
     name: str
-    morning: bool
-    afternoon: bool
-    evening: bool
-    dosage: int
-    duration_days: int
+    isMorning: bool
+    isAfternoon: bool
+    isEvening: bool
+    duration: int
+    amount: int
 
 
 class Medications(BaseModel):

@@ -3,6 +3,8 @@ from app.schemas.medications import Medications, Medication
 import json
 from typing import AsyncIterable, Union
 from app.exception.errors import RecognitionException
+from urllib import request
+import os
 
 
 class GeminiRecognitionService:
@@ -23,6 +25,20 @@ class GeminiRecognitionService:
         return Medications(medications=medications)
 
     @staticmethod
+    async def get_medications_url(messageId: str):
+        url = "https://api-data.line.me/v2/bot/message/" + messageId + "/content"
+        headers = {"Authorization": "Bearer " + os.environ["CHANNEL_TOKEN"]}
+        get_req = request.Request(url, headers=headers)
+        with request.urlopen(get_req) as response:
+            img = Image.from_bytes(response.read())
+        json_dict = await GeminiRecognitionService.recognize(img)
+        # Medicationsオブジェクトに変換して返す
+        medications = []
+        for med in json_dict["medications"]:
+            medications.append(Medication(**med))
+        return Medications(medications=medications)
+
+    @staticmethod
     async def recognize(img: Image):
         # VertexAIのAPIを呼ぶ
         response = await GeminiRecognitionService.__model.generate_content_async(
@@ -33,19 +49,19 @@ class GeminiRecognitionService:
             "medications": [
                 {
                     "name": "Medication 1",
-                    "morning": false,
-                    "afternoon": true,
-                    "evening": true,
-                    "dosage": 1,
-                    "duration_days": 5
+                    "isMorning": false,
+                    "isAfternoon": true,
+                    "isEvening": true,
+                    "duration": 14,
+                    "amount": 1
                 },
                 {
                     "name": "Medication 2",
-                    "morning": true,
-                    "afternoon": false,
-                    "evening": true,
-                    "dosage": 2,
-                    "duration_days": 20
+                    "isMorning": true,
+                    "isAfternoon": false,
+                    "isEvening": false,
+                    "duration": 7,
+                    "amount": 2
                 }
             ]
         }
