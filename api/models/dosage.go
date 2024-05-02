@@ -24,6 +24,7 @@ type MedicationListForRegisterMedications struct {
 	IsAfternoon bool   `json:"isAfternoon"`
 	IsEvening   bool   `json:"isEvening"`
 	Duration    int    `json:"duration"`
+	Amount      int    `json:"amount"`
 }
 
 type MedicationListForGetMedications struct {
@@ -51,7 +52,7 @@ func (dr *DosageRepo) RegisterMedications(ml []MedicationListForRegisterMedicati
 	defer stmt.Close()
 
 	for _, m := range ml {
-		_, err := stmt.Exec(m.Name, m.Duration, m.IsMorning, m.IsAfternoon, m.IsEvening, userId)
+		_, err := stmt.Exec(m.Name, m.Amount, m.Duration, m.IsMorning, m.IsAfternoon, m.IsEvening, userId)
 		if err != nil {
 			return err
 		}
