@@ -29,10 +29,8 @@ class GeminiRecognitionService:
         url = "https://api-data.line.me/v2/bot/message/" + messageId + "/content"
         headers = {"Authorization": "Bearer " + os.environ["CHANNEL_TOKEN"]}
         get_req = request.Request(url, headers=headers)
-        print(get_req.headers, get_req.full_url)
         with request.urlopen(get_req) as response:
             img = Image.from_bytes(response.read())
-            print(img)
         json_dict = await GeminiRecognitionService.recognize(img)
         # Medicationsオブジェクトに変換して返す
         medications = []
@@ -51,19 +49,19 @@ class GeminiRecognitionService:
             "medications": [
                 {
                     "name": "Medication 1",
-                    "morning": false,
-                    "afternoon": true,
-                    "evening": true,
-                    "dosage": 1,
-                    "duration_days": 5
+                    "isMorning": false,
+                    "isAfternoon": true,
+                    "isEvening": true,
+                    "duration": 14,
+                    "amount": 1
                 },
                 {
                     "name": "Medication 2",
-                    "morning": true,
-                    "afternoon": false,
-                    "evening": true,
-                    "dosage": 2,
-                    "duration_days": 20
+                    "isMorning": true,
+                    "isAfternoon": false,
+                    "isEvening": false,
+                    "duration": 7,
+                    "amount": 2
                 }
             ]
         }
