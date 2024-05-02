@@ -2,8 +2,10 @@ package router
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -20,6 +22,10 @@ type LINEConfig struct {
 	bot           *messaging_api.MessagingApiAPI
 	blob          *messaging_api.MessagingApiBlobAPI
 	db            *sql.DB
+}
+
+type Medications struct {
+	Medications []models.MedicationListForRegisterMedications `json:"medications"`
 }
 
 func NewLINEConfig(channelSecret, channelToken string, db *sql.DB) (*LINEConfig, error) {
@@ -268,7 +274,6 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 			switch message := e.Message.(type) {
 			case webhook.ImageMessageContent:
 				// 薬の情報をAPIから取得
-				// content, err := app.blob.GetMessageContent(message.Id)
 				s := e.Source.(webhook.UserSource)
 				app.bot.ShowLoadingAnimation(&messaging_api.ShowLoadingAnimationRequest{
 					ChatId:         s.UserId,
@@ -287,8 +292,72 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(500)
 					return
 				}
+				var medications Medications
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				if err := json.Unmarshal(body, &medications); err != nil {
+					fmt.Println(err)
+					w.WriteHeader(500)
+					return
+				}
 
-				fmt.Println(resp.Body)
+				fmt.Println(medications)
+
+				err = dosageModel.RegisterMedications(medications.Medications, s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				contents := []messaging_api.FlexBubble{}
+				for _, medication := range medications.Medications {
+					morningAmount := 0
+					afternoonAmount := 0
+					eveningAmount := 0
+					if medication.IsMorning {
+						morningAmount = medication.Amount
+					}
+					if medication.IsAfternoon {
+						afternoonAmount = medication.Amount
+					}
+					if medication.IsEvening {
+						eveningAmount = medication.Amount
+					}
+					contents = append(contents, messaging_api.FlexBubble{
+						Body: &messaging_api.FlexBox{
+							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
+							Contents: []messaging_api.FlexComponentInterface{
+								&messaging_api.FlexText{
+									Text:   "以下の薬を登録しました",
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Size:   "sm",
+								},
+								&messaging_api.FlexText{
+									Text:   medication.Name,
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Size:   string(messaging_api.FlexTextFontSize_XS),
+									Margin: "md",
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								},
+								// &messaging_api.FlexButton{
+								// 	Action: &messaging_api.PostbackAction{
+								// 		Label: "この薬は登録をやめる",
+								// 		Data:  "action=tobeimplemented",
+								// 	},
+								// },
+								// 名前の修正なども追加する
+							},
+						}})
+
+				}
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
 
 			}
 		}
