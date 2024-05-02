@@ -13,8 +13,17 @@ func InitializeDosageRepo(db SqlExecutor) *DosageRepo {
 }
 
 type DosageModel interface {
+	RegisterMedications(ml []MedicationListForRegisterMedications, userId string) error
 	GetMedications(userId string) ([]MedicationListForGetMedications, error)
 	DeleteMedications(userId string, dosageId int) error
+}
+
+type MedicationListForRegisterMedications struct {
+	Name        string `json:"name"`
+	IsMorning   bool   `json:"isMorning"`
+	IsAfternoon bool   `json:"isAfternoon"`
+	IsEvening   bool   `json:"isEvening"`
+	Duration    int    `json:"duration"`
 }
 
 type MedicationListForGetMedications struct {
@@ -26,6 +35,29 @@ type MedicationListForGetMedications struct {
 	IsMorning   bool   `json:"isMorning"`
 	IsAfternoon bool   `json:"isAfternoon"`
 	IsEvening   bool   `json:"isEvening"`
+}
+
+func (dr *DosageRepo) RegisterMedications(ml []MedicationListForRegisterMedications, userId string) error {
+	stmt, err := dr.repo.Prepare(
+		`
+			INSERT INTO
+				dosage(name, amount, duration, morning_flg, afternoon_flg, evening_flg, user_id)
+			VALUES
+				($1, $2, $3, $4, $5, $6, (SELECT id FROM users WHERE line_user_id = $7));
+			`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, m := range ml {
+		_, err := stmt.Exec(m.Name, m.Duration, m.IsMorning, m.IsAfternoon, m.IsEvening, userId)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (dr *DosageRepo) GetMedications(userId string) ([]MedicationListForGetMedications, error) {
