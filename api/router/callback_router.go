@@ -243,6 +243,41 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
 					Text: timeText + "の時刻を" + parsedTime.Format("15:04") + "に設定しました！",
 				})
+			case "register":
+				//薬の画像を送らせる
+				utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+					Text: "薬の画像を送ってください",
+					QuickReply: &messaging_api.QuickReply{
+						Items: []messaging_api.QuickReplyItem{
+							{
+								Action: messaging_api.CameraAction{
+									Label: "カメラで撮影",
+								},
+							},
+							{
+								Action: messaging_api.CameraRollAction{
+									Label: "カメラロールから選択",
+								},
+							},
+						}}})
+				// 将来この処理のあとにのみ画像を受け取るようにするなら、userモデルなどに画像を受け取る状態を持たせる
+
+			}
+
+		case webhook.MessageEvent:
+			switch message := e.Message.(type) {
+			case webhook.ImageMessageContent:
+				// 薬の情報をAPIから取得
+				content, err := app.blob.GetMessageContentTranscodingByMessageId(message.Id)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
+				fmt.Println(content)
+				// app.bot.ShowLoadingAnimation(&messaging_api.ShowLoadingAnimationRequest{
+				// 	ChatId:         s.UserId,
+				// 	LoadingSeconds: 10,
+				// })
 			}
 		}
 	}
