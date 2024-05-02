@@ -4,11 +4,103 @@ import (
 	"bytes"
 	"database/sql"
 	"io/ioutil"
+	"reflect"
 	"testing"
 
 	_ "github.com/lib/pq"
 )
 
+func TestRegisterMedications(t *testing.T) {
+	// Connect to the database
+	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
+	if err != nil {
+		t.Fatalf("Failed to connect to DB: %v", err)
+	}
+	defer db.Close()
+
+	// Begin a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		t.Fatalf("Failed to begin transaction: %v", err)
+	}
+
+	// テストデータをロード
+	traitSql, err := ReadSQLFile("./testdata/dosage_test.sql")
+	if err != nil {
+		t.Fatalf("Failed to read SQL file: %v", err)
+	}
+	_, err = tx.Exec(traitSql)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to load test data: %v", err)
+	}
+
+	// Initialize the DosageRepo
+	repo := InitializeDosageRepo(tx)
+
+	testMedicationList := []MedicationListForRegisterMedications{
+		{Name: "トラネキサム", Amount: 1, Duration: 2, IsMorning: true, IsAfternoon: false, IsEvening: true},
+		{Name: "トラネキサム2", Amount: 1, Duration: 2, IsMorning: false, IsAfternoon: false, IsEvening: true},
+		{Name: "トラネキサム3", Amount: 1, Duration: 2, IsMorning: true, IsAfternoon: false, IsEvening: false},
+	}
+	testId := "test_id_for_register_medications"
+
+	// Call the RegisterMedications method
+	err = repo.RegisterMedications(testMedicationList, testId)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to register medication: %v", err)
+	}
+
+	// Check if the medication was registered successfully
+	medications, err := repo.GetMedications(testId)
+	if err != nil {
+		tx.Rollback()
+		t.Fatalf("Failed to get medications: %v", err)
+	}
+
+	expected := []MedicationListForGetMedications{
+		{
+			Id:          1,
+			Name:        "トラネキサム",
+			Amount:      1,
+			Duration:    2,
+			IsMorning:   true,
+			IsAfternoon: false,
+			IsEvening:   true,
+		},
+		{
+			Id:          1,
+			Name:        "トラネキサム2",
+			Amount:      1,
+			Duration:    2,
+			IsMorning:   false,
+			IsAfternoon: false,
+			IsEvening:   true,
+		},
+		{
+			Id:          1,
+			Name:        "トラネキサム3",
+			Amount:      1,
+			Duration:    2,
+			IsMorning:   true,
+			IsAfternoon: false,
+			IsEvening:   false,
+		},
+	}
+
+	for i, medication := range medications {
+		//Idは連番でつくので考慮しないようにあらかじめ期待する結果を入れておく
+		medication.Id = expected[i].Id
+
+		if !reflect.DeepEqual(medication, expected[i]) {
+			tx.Rollback()
+			t.Errorf("Unexpected result: got %+v, want %+v", medication, expected[i])
+		}
+	}
+
+	tx.Rollback()
+}
 func TestGetMedications(t *testing.T) {
 	// データベースに接続
 	db, err := sql.Open("postgres", "host=localhost port=5433 user=testcase password=password dbname=testcase sslmode=disable")
