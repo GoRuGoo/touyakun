@@ -43,7 +43,7 @@ func (nc NotificationConfig) NotificationController(db *sql.DB) {
 func sendMedicationNotificationForSpecifiedLineUser(lineUserId string, dosageName string, dosageAmount string, channelAccessToken string) {
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"to":       lineUserId,
-		"messages": []map[string]string{{"type": "text", "text": dosageName + "を" + dosageAmount + "錠飲んでください"}},
+		"messages": []map[string]string{{"type": "text", "text":"服薬の時間です!\n"+ dosageName + "を" + dosageAmount + "錠飲んでください！ 🎉"}},
 	})
 
 	req, _ := http.NewRequest("POST", "https://api.line.me/v2/bot/message/push", bytes.NewBuffer(requestBody))
