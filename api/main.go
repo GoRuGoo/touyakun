@@ -19,7 +19,7 @@ func main() {
 	//リクエスト単体で実行するのにルーターは必要ないのでcontrollerがrouter代わり
 	nc := controllers.InitializeNotificationController(os.Getenv("CHANNEL_TOKEN"))
 	c := cron.New()
-	c.AddFunc("@every 5s", func() { nc.NotificationController(db) })
+	c.AddFunc("* * * * *", func() { nc.NotificationController(db) })
 	c.Start()
 
 	router.InitializeRouter(db)
