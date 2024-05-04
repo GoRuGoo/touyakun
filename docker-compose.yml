@@ -38,6 +38,7 @@ services:
       - 8080
     volumes:
       - ./ai:/usr/src/ai
+      - ./ai/key/service-account.json:/usr/src/ai/key/service-account.json
     env_file:
       - ./ai/.env
   db:
