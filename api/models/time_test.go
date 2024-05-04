@@ -42,9 +42,9 @@ func TestGetMedicationRemindTimeList(t *testing.T) {
 	}
 
 	expected := MedicationRemindTimeList{
-		MorningTime:   "08:00:00",
-		AfternoonTime: "12:00:00",
-		EveningTime:   "18:00:00",
+		MorningTime:   "08:00",
+		AfternoonTime: "12:00",
+		EveningTime:   "18:00",
 	}
 
 	if medicationRemindTimeList != expected {

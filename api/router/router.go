@@ -8,11 +8,7 @@ import (
 	"os"
 )
 
-func InitializeRouter() {
-	db, err := sql.Open("postgres", "host=db port=5432 user=touyakun password=password dbname=touyakun sslmode=disable")
-	if err != nil {
-		log.Fatal(err)
-	}
+func InitializeRouter(db *sql.DB) {
 	app, err := NewLINEConfig(os.Getenv("CHANNEL_SECRET"), os.Getenv("CHANNEL_TOKEN"), db)
 	if err != nil {
 		log.Fatal(err)
