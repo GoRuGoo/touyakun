@@ -8,3 +8,4 @@ poetry.lock
 .env
 touyakun-credentials.json
 exec_dosage_data.sql
+/ai/key
