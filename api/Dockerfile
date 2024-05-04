@@ -6,6 +6,8 @@ RUN mkdir /go/src/api
 
 WORKDIR /go/src/api
 
+ADD https://github.com/golang/go/raw/master/lib/time/zoneinfo.zip /usr/local/go/lib/time/zoneinfo.zip
+
 ADD . /go/src/api
 
 RUN go install github.com/cosmtrek/air@latest
