@@ -133,6 +133,11 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					})
 					return
 				}
+				medicationTimeList, err := timeModel.GetMedicationRemindTimeList(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
 				//ユーザーにどの薬を消すかFlex Messageを使って質問
 				contents := []messaging_api.FlexBubble{}
 				for _, medication := range medications {
@@ -153,23 +158,104 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
 							Contents: []messaging_api.FlexComponentInterface{
 								&messaging_api.FlexText{
+									Text:   "以下の薬を削除しますか？",
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Color:  "#1DB446",
+									Size:   "xxs",
+								},
+								&messaging_api.FlexText{
 									Text:   medication.Name,
 									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Size:   "xxl",
+									Margin: "sm",
 								},
 								&messaging_api.FlexText{
-									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+									Text:  fmt.Sprintf("%d日分", medication.Duration),
+									Size:  "md",
+									Color: "#444444",
+									Align: messaging_api.FlexTextALIGN_END,
 								},
-								&messaging_api.FlexText{
-									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								&messaging_api.FlexSeparator{
+									Margin: "md",
+								},
+								// 薬3つまとめたBox
+								&messaging_api.FlexBox{
+									Layout:  messaging_api.FlexBoxLAYOUT_VERTICAL,
+									Margin:  "xxl",
+									Spacing: "sm",
+									Contents: []messaging_api.FlexComponentInterface{
+										//朝のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "朝 (" + medicationTimeList.MorningTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(morningAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+										//昼のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "昼 (" + medicationTimeList.AfternoonTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(afternoonAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+										//夜のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "夜 (" + medicationTimeList.EveningTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(eveningAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+									},
+								},
+								&messaging_api.FlexSeparator{
+									Margin: "xxl",
 								},
 								&messaging_api.FlexButton{
+									Margin: "lg",
+									Height: "sm",
+									Style:  messaging_api.FlexButtonSTYLE_SECONDARY,
 									Action: &messaging_api.PostbackAction{
 										Label: "削除",
 										Data:  fmt.Sprintf("action=deleteById&medication_id=%d", medication.Id),
 									},
 								},
-							},
-						}})
+							}}})
 				}
 				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
 			case "deleteById":
@@ -379,36 +465,6 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					if medication.IsEvening {
 						eveningAmount = medication.Amount
 					}
-					// contents = append(contents, messaging_api.FlexBubble{
-					// 	Body: &messaging_api.FlexBox{
-					// 		Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
-					// 		Contents: []messaging_api.FlexComponentInterface{
-					// 			&messaging_api.FlexText{
-					// 				Text:   "以下の薬を登録しました",
-					// 				Weight: messaging_api.FlexTextWEIGHT_BOLD,
-					// 				Size:   "sm",
-					// 			},
-					// 			&messaging_api.FlexText{
-					// 				Text:   medication.Name,
-					// 				Weight: messaging_api.FlexTextWEIGHT_BOLD,
-					// 				Size:   string(messaging_api.FlexTextFontSize_XS),
-					// 				Margin: "md",
-					// 			},
-					// 			&messaging_api.FlexText{
-					// 				Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
-					// 			},
-					// 			&messaging_api.FlexText{
-					// 				Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
-					// 			},
-					// 			// &messaging_api.FlexButton{
-					// 			// 	Action: &messaging_api.PostbackAction{
-					// 			// 		Label: "この薬は登録をやめる",
-					// 			// 		Data:  "action=tobeimplemented",
-					// 			// 	},
-					// 			// },
-					// 			// 名前の修正なども追加する
-					// 		},
-					// 	}})
 					contents = append(contents, messaging_api.FlexBubble{
 						Body: &messaging_api.FlexBox{
 							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
