@@ -280,31 +280,74 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				// どの時間を変えたいか選択する
-				template := &messaging_api.ButtonsTemplate{
-					Title: "通知時刻変更",
-					Text:  "どの時刻を変更する？ 変更したいところをタップ！",
-					Actions: []messaging_api.ActionInterface{
-						&messaging_api.DatetimePickerAction{
-							Label:   "朝：(現在の設定:" + times.MorningTime + ")",
-							Data:    "action=registerTime&time=morning",
-							Initial: times.MorningTime,
-							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
-						},
-						&messaging_api.DatetimePickerAction{
-							Label:   "昼：(現在の設定:" + times.AfternoonTime + ")",
-							Data:    "action=registerTime&time=afternoon",
-							Initial: times.AfternoonTime,
-							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
-						},
-						&messaging_api.DatetimePickerAction{
-							Label:   "夜：(現在の設定:" + times.EveningTime + ")",
-							Data:    "action=registerTime&time=evening",
-							Initial: times.EveningTime,
-							Mode:    messaging_api.DatetimePickerActionMODE_TIME,
-						},
-					},
-				}
-				utils.ReplyTemplateMessage(app.bot, w, e.ReplyToken, template)
+				content := messaging_api.FlexBubble{
+					Body: &messaging_api.FlexBox{
+						Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
+						Contents: []messaging_api.FlexComponentInterface{
+							&messaging_api.FlexText{
+								Text:   "通知時刻変更",
+								Weight: messaging_api.FlexTextWEIGHT_BOLD,
+								Color:  "#1DB446",
+								Size:   "xxs",
+							},
+							&messaging_api.FlexText{
+								Text:   "変更する時間をタップ！",
+								Weight: messaging_api.FlexTextWEIGHT_BOLD,
+								Size:   "xl",
+								Margin: "sm",
+							},
+							&messaging_api.FlexSeparator{
+								Margin: "md",
+							},
+							&messaging_api.FlexButton{
+								Margin: "md",
+								Height: "sm",
+								Style:  messaging_api.FlexButtonSTYLE_PRIMARY,
+								Action: &messaging_api.DatetimePickerAction{
+									Label:   "朝：(現在の設定:" + times.MorningTime + ")",
+									Data:    "action=registerTime&time=morning",
+									Initial: times.MorningTime,
+									Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+								},
+							},
+							&messaging_api.FlexButton{
+								Margin: "md",
+								Height: "sm",
+								Style:  messaging_api.FlexButtonSTYLE_PRIMARY,
+								Action: &messaging_api.DatetimePickerAction{
+									Label:   "昼：(現在の設定:" + times.AfternoonTime + ")",
+									Data:    "action=registerTime&time=afternoon",
+									Initial: times.AfternoonTime,
+									Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+								},
+							},
+							&messaging_api.FlexButton{
+								Margin: "md",
+								Height: "sm",
+								Style:  messaging_api.FlexButtonSTYLE_PRIMARY,
+								Action: &messaging_api.DatetimePickerAction{
+									Label:   "夜：(現在の設定:" + times.EveningTime + ")",
+									Data:    "action=registerTime&time=evening",
+									Initial: times.EveningTime,
+									Mode:    messaging_api.DatetimePickerActionMODE_TIME,
+								},
+							},
+							&messaging_api.FlexSeparator{
+								Margin: "md",
+							},
+							&messaging_api.FlexBox{
+								Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+								Margin: "md",
+								Contents: []messaging_api.FlexComponentInterface{
+									&messaging_api.FlexText{
+										Text:  "薬の一覧表示は下のメニューから！",
+										Size:  "xs",
+										Color: "#888888",
+									},
+								},
+							},
+						}}}
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, []messaging_api.FlexBubble{content})
 			case "registerTime":
 				timeParam, found := e.Postback.Params["time"]
 				if !found {
