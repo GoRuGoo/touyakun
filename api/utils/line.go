@@ -7,12 +7,12 @@ import (
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 )
 
-func ReplyFlexCarouselMessage(bot *messaging_api.MessagingApiAPI, w http.ResponseWriter, replyToken string, contents []messaging_api.FlexBubble) {
+func ReplyFlexCarouselMessage(bot *messaging_api.MessagingApiAPI, w http.ResponseWriter, replyToken string, altText string, contents []messaging_api.FlexBubble) {
 	replyMessage(bot, w, replyToken, &messaging_api.FlexMessage{
 		Contents: &messaging_api.FlexCarousel{
 			Contents: contents,
 		},
-		AltText: "Flex message alt text",
+		AltText: altText,
 	})
 }
 

@@ -257,7 +257,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								},
 							}}})
 				}
-				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, "削除する薬を選択", contents)
 			case "deleteById":
 				medicationId := u.Get("medication_id")
 				id, err := strconv.Atoi(medicationId)
@@ -347,7 +347,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								},
 							},
 						}}}
-				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, []messaging_api.FlexBubble{content})
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, "変更したい時刻を選択", []messaging_api.FlexBubble{content})
 			case "registerTime":
 				timeParam, found := e.Postback.Params["time"]
 				if !found {
@@ -528,7 +528,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								// },
 							}}})
 				}
-				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, "薬の一覧を表示", contents)
 			}
 
 		case webhook.MessageEvent:
@@ -699,7 +699,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								},
 							}}})
 				}
-				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, "薬を登録しました", contents)
 
 			}
 		}
