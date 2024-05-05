@@ -267,7 +267,54 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 							},
 						}}})
 				// 将来この処理のあとにのみ画像を受け取るようにするなら、userモデルなどに画像を受け取る状態を持たせる
-
+			case "showall":
+				// 薬の一覧を取得
+				medications, err := dosageModel.GetMedications(s.UserId)
+				if err != nil {
+					utils.ReplyTextMessage(app.bot, w, e.ReplyToken, &messaging_api.TextMessage{
+						Text: "登録されている薬はありません",
+					})
+					return
+				}
+				contents := []messaging_api.FlexBubble{}
+				for _, medication := range medications {
+					morningAmount := 0
+					afternoonAmount := 0
+					eveningAmount := 0
+					if medication.IsMorning {
+						morningAmount = medication.Amount
+					}
+					if medication.IsAfternoon {
+						afternoonAmount = medication.Amount
+					}
+					if medication.IsEvening {
+						eveningAmount = medication.Amount
+					}
+					contents = append(contents, messaging_api.FlexBubble{
+						Body: &messaging_api.FlexBox{
+							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
+							Contents: []messaging_api.FlexComponentInterface{
+								&messaging_api.FlexText{
+									Text:   medication.Name,
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+								},
+								&messaging_api.FlexText{
+									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								},
+								// 修正部分は未実装
+								// &messaging_api.FlexButton{
+								// 	Action: &messaging_api.PostbackAction{
+								// 		Label: "修正",
+								// 		Data:  fmt.Sprintf("action=tobeimplemented&medication_id=%d", medication.Id),
+								// 	},
+								// },
+							},
+						}})
+				}
+				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
 			}
 
 		case webhook.MessageEvent:
