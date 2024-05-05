@@ -166,7 +166,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								&messaging_api.FlexText{
 									Text:   medication.Name,
 									Weight: messaging_api.FlexTextWEIGHT_BOLD,
-									Size:   "xxl",
+									Size:   "xl",
 									Margin: "sm",
 								},
 								&messaging_api.FlexText{
@@ -362,6 +362,11 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 					})
 					return
 				}
+				medicationTimeList, err := timeModel.GetMedicationRemindTimeList(s.UserId)
+				if err != nil {
+					w.WriteHeader(500)
+					return
+				}
 				contents := []messaging_api.FlexBubble{}
 				for _, medication := range medications {
 					morningAmount := 0
@@ -381,24 +386,104 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 							Layout: messaging_api.FlexBoxLAYOUT_VERTICAL,
 							Contents: []messaging_api.FlexComponentInterface{
 								&messaging_api.FlexText{
+									Text:   "以下の内容で登録されています",
+									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Color:  "#1DB446",
+									Size:   "xxs",
+								},
+								&messaging_api.FlexText{
 									Text:   medication.Name,
 									Weight: messaging_api.FlexTextWEIGHT_BOLD,
+									Size:   "xl",
+									Margin: "sm",
 								},
 								&messaging_api.FlexText{
-									Text: fmt.Sprintf("朝%d錠 昼%d錠 夜%d錠", morningAmount, afternoonAmount, eveningAmount),
+									Text:  fmt.Sprintf("%d日分", medication.Duration),
+									Size:  "md",
+									Color: "#444444",
+									Align: messaging_api.FlexTextALIGN_END,
 								},
-								&messaging_api.FlexText{
-									Text: fmt.Sprintf("服用期間: %d日分", medication.Duration),
+								&messaging_api.FlexSeparator{
+									Margin: "md",
 								},
-								// 修正部分は未実装
+								// 薬3つまとめたBox
+								&messaging_api.FlexBox{
+									Layout:  messaging_api.FlexBoxLAYOUT_VERTICAL,
+									Margin:  "xxl",
+									Spacing: "sm",
+									Contents: []messaging_api.FlexComponentInterface{
+										//朝のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "朝 (" + medicationTimeList.MorningTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(morningAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+										//昼のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "昼 (" + medicationTimeList.AfternoonTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(afternoonAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+										//夜のBox
+										&messaging_api.FlexBox{
+											Layout: messaging_api.FlexBoxLAYOUT_HORIZONTAL,
+											Contents: []messaging_api.FlexComponentInterface{
+												&messaging_api.FlexText{
+													Text:  "夜 (" + medicationTimeList.EveningTime + ")",
+													Size:  "md",
+													Color: "#444444",
+												},
+												&messaging_api.FlexText{
+													Text:  strconv.Itoa(eveningAmount) + " 錠",
+													Size:  "md",
+													Color: "#222222",
+													Align: messaging_api.FlexTextALIGN_END,
+												},
+											},
+											JustifyContent: "space-between",
+											AlignItems:     "center",
+										},
+									},
+								},
+								// &messaging_api.FlexSeparator{
+								// 	Margin: "xxl",
+								// },
 								// &messaging_api.FlexButton{
+								// 	Margin: "lg",
+								// 	Height: "sm",
+								// 	Style:  messaging_api.FlexButtonSTYLE_SECONDARY,
 								// 	Action: &messaging_api.PostbackAction{
 								// 		Label: "修正",
-								// 		Data:  fmt.Sprintf("action=tobeimplemented&medication_id=%d", medication.Id),
+								// 		Data:  fmt.Sprintf("action=fix&medication_id=%d", medication.Id),
 								// 	},
 								// },
-							},
-						}})
+							}}})
 				}
 				utils.ReplyFlexCarouselMessage(app.bot, w, e.ReplyToken, contents)
 			}
@@ -478,7 +563,7 @@ func (app *LINEConfig) CallBackRouter(w http.ResponseWriter, r *http.Request) {
 								&messaging_api.FlexText{
 									Text:   medication.Name,
 									Weight: messaging_api.FlexTextWEIGHT_BOLD,
-									Size:   "xxl",
+									Size:   "xl",
 									Margin: "sm",
 								},
 								&messaging_api.FlexText{
